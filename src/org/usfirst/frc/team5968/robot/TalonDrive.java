@@ -55,8 +55,14 @@ public class TalonDrive {
 	}
     
 	public static void testTemperature(CANTalon c) {
-		if (c.getTemperature() >= 93.3) {
+		if (c.getTemperature() >= 38.0) {
 			System.out.println("TOO HOT, " + c.getDeviceID());
+		}
+	}
+	
+	public static void testCurrent(CANTalon c) {
+		if (c.getOutputCurrent() >= 30.0) {
+			System.out.println("TOO MUCH CURRENT, " + c.getDeviceID());
 		}
 	}
 	

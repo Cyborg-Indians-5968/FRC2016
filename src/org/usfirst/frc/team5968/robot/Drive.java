@@ -74,12 +74,11 @@ public class Drive {
 		setRaw(leftSpeed, rightSpeed);
 	}
 	
-	
-	
 	public void setRaw(double leftSpeed, double rightSpeed){
 		leftMotor.set(leftSpeed);
 		rightMotor.set(-rightSpeed);
 	}
+	
 	public void humanDrive(double leftSpeed, double rightSpeed)
 	{
 		if(Math.abs(leftSpeed) <= .03)
