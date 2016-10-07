@@ -4,17 +4,19 @@ import edu.wpi.first.wpilibj.CounterBase.EncodingType;
 import edu.wpi.first.wpilibj.interfaces.Gyro;
 
 import edu.wpi.first.wpilibj.ADXRS450_Gyro;
+import edu.wpi.first.wpilibj.CANTalon;
 import edu.wpi.first.wpilibj.Encoder;
 import edu.wpi.first.wpilibj.SpeedController;
 import edu.wpi.first.wpilibj.Timer;
-import edu.wpi.first.wpilibj.Victor;
 
-public class Drive {
+public class TalonDrive {
 	
 	private long nanotimeOld;
 	
-	private SpeedController leftMotor;
-	private SpeedController rightMotor;
+	private static CANTalon leftMotorFront;
+	private static CANTalon rightMotorFront;
+	private static CANTalon leftMotorBack;
+	private static CANTalon rightMotorBack;
 	
 	private Encoder leftEncoder;
 	private Encoder rightEncoder;
@@ -25,13 +27,22 @@ public class Drive {
 	
 	private Gyro gyro;
 	
-	public Drive(){
+	public TalonDrive(){
 
-		leftMotor = new Victor(PortMap.leftMotor);
-		rightMotor = new Victor(PortMap.rightMotor);
+		leftMotorFront = new CANTalon(0);
+		rightMotorFront = new CANTalon(1);
+		leftMotorBack = new CANTalon(2);
+		rightMotorBack = new CANTalon(3);
+		/*
+		leftMotorFront.changeControlMode(CANTalon.ControlMode.PercentVbus);
+		rightMotorFront.changeControlMode(CANTalon.ControlMode.PercentVbus);
+		leftMotorBack.changeControlMode(CANTalon.ControlMode.PercentVbus);
+		rightMotorBack.changeControlMode(CANTalon.ControlMode.PercentVbus);
+		*/
 		
-		leftEncoder = new Encoder(PortMap.leftEncoderOne, PortMap.leftEncoderTwo, false, EncodingType.k1X);
-		rightEncoder = new Encoder(PortMap.rightEncoderOne, PortMap.rightEncoderTwo, false, EncodingType.k1X);
+		leftEncoder = new Encoder(0, 1, false, EncodingType.k1X);
+		rightEncoder = new Encoder(2, 3, false, EncodingType.k1X);
+		
 		leftEncoder.setDistancePerPulse(.0469);
 		rightEncoder.setDistancePerPulse(.0469);
 		
@@ -43,6 +54,17 @@ public class Drive {
 		
 	}
     
+	public static void testTemperature(CANTalon c) {
+		if (c.getTemperature() >= 38.0) {
+			System.out.println("TOO HOT, " + c.getDeviceID());
+		}
+	}
+	
+	public static void testCurrent(CANTalon c) {
+		if (c.getOutputCurrent() >= 30.0) {
+			System.out.println("TOO MUCH CURRENT, " + c.getDeviceID());
+		}
+	}
 	
 	public void driveStraight(boolean forward)
 	{
@@ -74,12 +96,21 @@ public class Drive {
 		setRaw(leftSpeed, rightSpeed);
 	}
 	
-	
-	
 	public void setRaw(double leftSpeed, double rightSpeed){
-		leftMotor.set(leftSpeed);
-		rightMotor.set(-rightSpeed);
+		setLeft(leftSpeed);
+		setRight(-rightSpeed);
 	}
+	
+	public static void setLeft(double speed) {
+		leftMotorFront.set(speed);
+		leftMotorBack.set(speed);
+	}
+	
+	public static void setRight(double speed) {
+		rightMotorFront.set(speed);
+		rightMotorBack.set(speed);
+	}
+	
 	public void humanDrive(double leftSpeed, double rightSpeed)
 	{
 		if(Math.abs(leftSpeed) <= .03)
