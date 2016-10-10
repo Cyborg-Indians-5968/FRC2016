@@ -2,10 +2,36 @@ import numpy as np
 import cv2
 import random
 import math
+import serial
+import picamera
+import picamera.array
 
-def main():
+port = serial.Serial('/dev/ttyS0',baudrate=38400,bytesize=EIGHTBITS,
+	PARITY_NONE,STOPBITS_ONE,None,
+	True,False,False,None,None)
 
-    img = cv2.imread('/Users/Nolan/Documents/theGreenGoal.png')
+def serialConect():
+
+    port.open()
+    port.flushInput()
+    port.flushOutput()
+    
+	while(True)
+		if(port.in_waiting==4)
+			if(port.read(4)=="ping".encode('ascii'))
+				port.write("here".encode('ascii'))
+				break
+
+def imageShoot():
+
+    #img = cv2.imread('/Users/Nolan/Documents/theGreenGoal.png')
+    #img2 = cv2.imread('/Users/Nolan/Documents/theGreenGoal.png')
+    with picamera.PiCamera() as camera:
+        time.sleep(2)
+    with picamera.array.PiRGBArray(camera) as stream:
+        camera.capture(stream, format='bgr')
+        # At this point the image is available as stream.array
+        img = stream.array
     imgToMatch = cv2.imread('/Users/Nolan/Documents/frcGOAL.png')
 
     hsv = cv2.cvtColor(img, cv2.COLOR_BGR2HSV)
@@ -50,6 +76,9 @@ def main():
     whitePixels = 0
 
     contour = contours[potGoalSpot[min(xrange(len(potGoalNum)),key=potGoalNum.__getitem__)]]
+    #cv2.drawContours(img2, contours, potGoalSpot[min(xrange(len(potGoalNum)),key=potGoalNum.__getitem__)], [0, 0, 255], 1)
+
+    #img2[contour[0][0][1], contour[0][0][0]] = [255, 0, 0]
 
     # Finds the highest x value in the contour array
     newHigh = 0
@@ -85,8 +114,8 @@ def main():
 
     pixelD = newHigh - newLow
 
-    cv2.imwrite("/Users/Nolan/Documents/theContors.png", img)
-    cv2.imwrite("/Users/Nolan/Documents/theContorsWithOne.png", img2)
+    #cv2.imwrite("/Users/Nolan/Documents/theContors.png", img)
+    #cv2.imwrite("/Users/Nolan/Documents/theContorsWithOne.png", img2)
 
 
 
@@ -94,11 +123,11 @@ def main():
 
 
     # Distance to an object, everythin in mm or pixels
-    focalLength = 1.0 # Will change for every camera, 1.0 is not correct, in mm
+    focalLength = 3.6 # Will change for every camera, 1.0 is not correct, in mm
     goalWidthReal = 457.2 # real width of goal in mm. 1.5 ft
     imageWidth = 1000 # Will change for every camera, 1000 is not correct, in pixels
     goalWidthPixels = pixelD # Determined above
-    sensorWidth = 1.0 # Will change for every camera, 1.0 is not correct, in mm
+    sensorWidth = 3.76 # Will change for every camera, 1.0 is not correct, in mm
 
     distanceToObject = (focalLength * goalWidthReal * imageWidth) / (goalWidthPixels * sensorWidth)
 
@@ -148,12 +177,12 @@ def main():
     toWidth = ((contour[newHighSpot][0][0] + contour[newLowSpot][0][0]) / 2)
 
     if toWidth < width / 2:
-        xFromCenter = (width / 2) - ((contour[newHighSpot][0][0] + contour[newLowSpot][0][0]) / 2)
-    elif toWidth > height / 2:
+        xFromCenter = ((width / 2) - ((contour[newHighSpot][0][0] + contour[newLowSpot][0][0]) / 2)) * -1
+    elif toWidth > width / 2:
         xFromCenter = ((contour[newHighSpot][0][0] + contour[newLowSpot][0][0]) / 2) - (width / 2)
     else:
         xFromCenter = 0
-    
+
 
 
 
@@ -166,7 +195,22 @@ def main():
     # groundDistance line 167
     # xToCorrectAngle line 165
     # yToCorrectAngle line 145
+    print("groundDistance " + groundDistance)
+    print("xToCorrectAngle " + xToCorrectAngle)
+    print("yToCorrectAngle " + yToCorrectAngle)
+    
+	port.write((str(groundDistance) + " " + str(xToCorrectAngle)).encode('ascii'))
 
-
+def takePicture():
+	picamera.PiCamera().capture(port,'jpeg')
+	port.flushOutput()
+	
 if __name__ == '__main__':
-    main()
+    serialConect()
+	
+	while(True)
+		input=port.read(4)
+		if(input=="gett".encode('ascii'))
+			imageShoot()
+		else if(input=="pict".encode('ascii'))
+			takePicture()

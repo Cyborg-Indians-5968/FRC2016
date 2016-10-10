@@ -4,64 +4,77 @@ import edu.wpi.first.wpilibj.SerialPort;
 import edu.wpi.first.wpilibj.SerialPort.Port;
 import edu.wpi.first.wpilibj.Timer;
 
+import java.nio.charset.StandardCharsets;
 import java.util.Scanner;
+
+import com.ni.vision.NIVision;
+import com.ni.vision.NIVision.Image;
 
 //TODO: Consider using query-response pattern. Methods below send query, and then another method checks for responses.
 //TODO: Need to fix life-cycle of responses that causes unnecessary long waits or not long enough waits for responses.
 //TODO: Remove this suppress warnings box
-@SuppressWarnings("unused")
-public class Uart {
-	/*private SerialPort port;
+
+public class uART {
+	private SerialPort port;
 	public double angle;
 	public double distance;
 	
-	public Uart() {
-        //TODO: !!! I don't know where you got this baud rate, but it is not a typical one. I'd suggest 38400, make sure you update the Pi too. If you are sure we tried with this value and it worked before, then you can leave it.
-        //TODO: I say this because some serial hardware is very picky about the baud rates it is capable of.
-		port = new SerialPort(5600, Port.kMXP);
-	}
-*/
-	/*public boolean checkEm()
-	{
-		port.writeString("TopKek");
-		port.flush();
-		Timer.delay(.25);
-		String stringRec = port.readString();
-		if (stringRec.equalsIgnoreCase("topLel"))
-		{
-			System.out.println("We've got 'er captain!");
-			return true;
-		}
-		else
-		{
-			System.out.println("We've lost 'er captain!");
-			return false;
-		}
-	}//end of checkEm method
+	private boolean connected;
 	
-	public void aquireTarget()
+	public uART() {
+		port = new SerialPort(38400, Port.kMXP, 8, SerialPort.Parity.kNone, SerialPort.StopBits.kOne);
+		port.setTimeout(2);
+		
+		String received = new String(SerialCommunicate("ping", 10), StandardCharsets.US_ASCII);
+		
+		if(received.equals("here")){
+			System.out.println("Raspberry Pi Found!");
+			connected = true;
+		}
+		else if(received.equals("")){
+			System.out.println("Raspberry Pi Not Found!");
+			connected = false;
+		}
+		else{
+			System.out.println("Raspberry Pi Found, but connection may be bad");
+			connected = true;
+		}
+	}
+	
+	public String aimToShoot()
 	{
-		port.writeString("fire");
-		port.flush();
-		Timer.delay(.25); //TODO: Investigate if necessary
-        
-        //TODO: !!! I just double checked the documentation, and this doesn't actually do what I thought it did. Sorry. It reads everything, it doesn't look for nulls like I originally thought. You need to dump a string that is delimited with some character or something.
-		String angleString = port.readString();
-		String distanceString = port.readString();
-		String angleString2 = port.readString();
-		//TODO: Sanitize input
-		/*if (stringRec.length() != 8)
-		{
-			angle = 9.11;
-			distance = 420.0;
-		}*/
-
-			/*angle = Double.parseDouble(angleString);
-			distance = Double.parseDouble(distanceString);
-			return;
-		
-		
-	}*/
-
-
+		String aimData = new String(SerialCommunicate("gett", 5), StandardCharsets.US_ASCII);
+		return aimData;
+	}
+	
+	public byte[] takePicture()
+	{
+		if(connected){
+			byte[] image = SerialCommunicate("pict", 5);
+			return image;
+		}
+		else{
+			System.err.println("Can't take picture! Raspberry pi not connected!");
+			return null;
+		}
+	}
+	
+	private byte[] SerialCommunicate(String toSend, int timeoutSeconds)
+	{
+		int loops = 0;
+		while(true){
+			port.write(toSend.getBytes(StandardCharsets.US_ASCII), 4);
+			port.flush();
+			
+			Timer.delay(.25);
+			
+			if(port.getBytesReceived() > 0){
+				byte[] b = port.read(port.getBytesReceived());
+			}
+			else if(loops >= timeoutSeconds * 4){
+				return null;
+			}
+			loops++;
+		}
+	}
 }

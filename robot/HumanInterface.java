@@ -11,6 +11,8 @@ public class HumanInterface {
 	private BallFeed feed;
 	private Pneumatics piston;
 	private BallShoot shoot;
+	private uART uart;
+	private DriverStationConnection driverStation;
 	
 	private boolean controlsReversed = false;
 	private boolean altControlsEnabled = false;
@@ -32,6 +34,8 @@ public class HumanInterface {
 		altStick = new Joystick(PortMap.altJoystick);
 		feed = new BallFeed();
 		piston = new Pneumatics();
+		uart = new uART();
+		driverStation = new DriverStationConnection();
 	}
 	
 	public enum BallFeedStates {
@@ -39,9 +43,20 @@ public class HumanInterface {
 	}
 	
 	public enum Buttons {
-		REVERSE_CONTROLS, ALTERNATE_CONTROLS, TOGGLE_MANUAL_SHOOT, TOGGLE_SHOOT_PLATFORM, SHOOT, FEED_SLOW, FEED_FAST, ALIGN_TO_SHOOT,FEED_BACKWARDS
+		REVERSE_CONTROLS, 
+		ALTERNATE_CONTROLS, 
+		TOGGLE_MANUAL_SHOOT, 
+		TOGGLE_SHOOT_PLATFORM, 
+		AUTO_AIM,
+		SHOOT, 
+		FEED_SLOW, 
+		FEED_FAST, 
+		ALIGN_TO_SHOOT,
+		FEED_BACKWARDS,
+		TAKE_PICTURE
 	}
 	
+	//TODO: These are randomly assigned. FIX!!!!
 	public boolean getButtonValue(Buttons button) {
 		
 		switch(button)
@@ -60,7 +75,6 @@ public class HumanInterface {
 				
 			case SHOOT:
 				return altStick.getRawButton(4);
-				
 			case FEED_SLOW:
 				return altStick.getRawButton(10);
 			
@@ -70,7 +84,8 @@ public class HumanInterface {
 				return altStick.getRawButton(9);
 			case FEED_BACKWARDS:
 				return altStick.getRawButton(3);
-			
+			case TAKE_PICTURE:
+				return altStick.getRawButton(6) || leftStick.getRawButton(1) || rightStick.getRawButton(1);
 			default:
 				return false;
 		}
@@ -111,7 +126,8 @@ public class HumanInterface {
         
 		if(getButtonValue(Buttons.ALIGN_TO_SHOOT) || driving)
 		{
-			//teleShoot.teleShootComputer();
+			String[] data = uart.aimToShoot().split(" ");
+			teleShoot.ballShootComputer(Double.parseDouble(data[0]), Double.parseDouble(data[1]));
 			
 		}
 		
@@ -130,6 +146,10 @@ public class HumanInterface {
 		
 		if(getButtonValue(Buttons.FEED_BACKWARDS)){
 			feed.ballFeed(BallFeedStates.BACKWARDS);
+		}
+		
+		if(getButtonValue(Buttons.TAKE_PICTURE)){
+			driverStation.sendImage(uart.takePicture());
 		}
 	}//end of method
 	

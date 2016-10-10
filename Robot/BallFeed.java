@@ -1,4 +1,4 @@
-package org.usfirst.frc.team5968.Robot;
+package org.usfirst.frc.team5968.robot;
 
 import org.usfirst.frc.team5968.robot.HumanInterface.BallFeedStates;
 import org.usfirst.frc.team5968.robot.PortMap;
