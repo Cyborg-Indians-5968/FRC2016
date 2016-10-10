@@ -29,6 +29,7 @@ def imageShoot():
     with picamera.PiCamera() as camera:
         time.sleep(2)
     with picamera.array.PiRGBArray(camera) as stream:
+	camera.resolution = (768, 576)
         camera.capture(stream, format='bgr')
         # At this point the image is available as stream.array
         img = stream.array
@@ -124,10 +125,10 @@ def imageShoot():
 
     # Distance to an object, everythin in mm or pixels
     focalLength = 3.6 # Will change for every camera, 1.0 is not correct, in mm
-    goalWidthReal = 457.2 # real width of goal in mm. 1.5 ft
-    imageWidth = 1000 # Will change for every camera, 1000 is not correct, in pixels
+    goalWidthReal = 508.1016 # real width of goal in mm. 1.667 ft
+    imageWidth = 2592 # Will change for every camera, 1000 is not correct, in pixels
     goalWidthPixels = pixelD # Determined above
-    sensorWidth = 3.76 # Will change for every camera, 1.0 is not correct, in mm
+    sensorWidth = 3.67 # Will change for every camera, 1.0 is not correct, in mm
 
     distanceToObject = (focalLength * goalWidthReal * imageWidth) / (goalWidthPixels * sensorWidth)
 
