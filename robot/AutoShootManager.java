@@ -1,5 +1,6 @@
 package org.usfirst.frc.team5968.robot;
 
+import org.usfirst.frc.team5968.Robot.*;
 import org.usfirst.frc.team5968.robot.HumanInterface.BallFeedStates;
 
 public class AutoShootManager {
