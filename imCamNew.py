@@ -15,7 +15,7 @@ def serialConect():
     port.open()
     port.flushInput()
     port.flushOutput()
-    
+
 	while(True)
 		if(port.in_waiting==4)
 			if(port.read(4)=="ping".encode('ascii'))
@@ -118,24 +118,16 @@ def imageShoot():
     #cv2.imwrite("/Users/Nolan/Documents/theContors.png", img)
     #cv2.imwrite("/Users/Nolan/Documents/theContorsWithOne.png", img2)
 
-
-
-
-
-
     # Distance to an object, everythin in mm or pixels
-    focalLength = 3.6 # Will change for every camera, 1.0 is not correct, in mm
+    focalLength = 3.6 # Will change for every camera, in mm
     goalWidthReal = 508.1016 # real width of goal in mm. 1.667 ft
-    imageWidth = 2592 # Will change for every camera, 1000 is not correct, in pixels
+    imageWidth = 2592 # Will change for every camera, in pixels
     goalWidthPixels = pixelD # Determined above
-    sensorWidth = 3.67 # Will change for every camera, 1.0 is not correct, in mm
+    sensorWidth = 3.76 # Will change for every camera, in mm
 
     distanceToObject = (focalLength * goalWidthReal * imageWidth) / (goalWidthPixels * sensorWidth)
 
     height, width, channels = img.shape
-
-
-
 
     #This finds the lowest y value in the contour array
     newLowHeight = 0
@@ -153,27 +145,6 @@ def imageShoot():
         if isLowHeight == True:
             break
 
-
-
-    # Finds distance in pixels bewteen center of screen and newLowSpotHeight... found above
-    toHeight = contour[newLowSpotHeight][0][1]
-
-    if toHeight < (height / 2):
-        yFromCenter = (height / 2) - (toHeight)
-    else:
-        yFromCenter = (toHeight) - (height / 2)
-
-
-
-
-    # Finds the the y angle the goal is at above or below the aready pre-existing set angle
-    yCorrectReal = (goalWidthReal * yFromCenter) / goalWidthPixels
-    yToCorrectAngle = (np.arcsin((1930.4 + yCorrectReal) / distanceToObject))
-
-
-
-
-
     # Finds the distance in pixels between the center of the screen and newHighSpot... found in the first set of for loops
     toWidth = ((contour[newHighSpot][0][0] + contour[newLowSpot][0][0]) / 2)
 
@@ -184,31 +155,24 @@ def imageShoot():
     else:
         xFromCenter = 0
 
-
-
-
     # Finds the x angle the goal is at relative to where the robot is pointing
     xToCorrectReal = (goalWidthReal * xFromCenter) / goalWidthPixels
     xToCorrectAngle = np.arcsin(xToCorrectReal / distanceToObject)
 
-    groundDistance = math.sqrt((distanceToObject * distanceToObject) - ((1930.4 + yCorrectReal) * (1930.4 + yCorrectReal)))
+    groundDistance = math.sqrt((distanceToObject * distanceToObject) - (1610.4 * 1610.4))
 
-    # groundDistance line 167
-    # xToCorrectAngle line 165
-    # yToCorrectAngle line 145
     print("groundDistance " + groundDistance)
     print("xToCorrectAngle " + xToCorrectAngle)
-    print("yToCorrectAngle " + yToCorrectAngle)
-    
+
 	port.write((str(groundDistance) + " " + str(xToCorrectAngle)).encode('ascii'))
 
 def takePicture():
 	picamera.PiCamera().capture(port,'jpeg')
 	port.flushOutput()
-	
+
 if __name__ == '__main__':
     serialConect()
-	
+
 	while(True)
 		input=port.read(4)
 		if(input=="gett".encode('ascii'))
