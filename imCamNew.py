@@ -76,7 +76,10 @@ def imageShoot():
 
     whitePixels = 0
 
-    contour = contours[potGoalSpot[min(xrange(len(potGoalNum)),key=potGoalNum.__getitem__)]]
+    try:
+        contour = contours[potGoalSpot[min(xrange(len(potGoalNum)),key=potGoalNum.__getitem__)]]
+    except:
+	print("Goal not found.")
     #cv2.drawContours(img2, contours, potGoalSpot[min(xrange(len(potGoalNum)),key=potGoalNum.__getitem__)], [0, 0, 255], 1)
 
     #img2[contour[0][0][1], contour[0][0][0]] = [255, 0, 0]
