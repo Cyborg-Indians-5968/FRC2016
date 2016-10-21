@@ -3,6 +3,7 @@ package robot;
 import org.usfirst.frc.team5968.Robot.*;
 import org.usfirst.frc.team5968.robot.HumanInterface.BallFeedStates;
 
+
 public class AutoShootManager {
 	private final double angle_MAX = 0;
 	private final double angle_MIN = 0;
