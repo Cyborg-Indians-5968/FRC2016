@@ -3,8 +3,26 @@ package robot;
 import org.usfirst.frc.team5968.Robot.*;
 import org.usfirst.frc.team5968.robot.HumanInterface.BallFeedStates;
 
+import edu.wpi.first.wpilibj.DriverStation;
+import edu.wpi.first.wpilibj.PIDController;
+import edu.wpi.first.wpilibj.PIDOutput;
+import edu.wpi.first.wpilibj.SPI;
+import edu.wpi.first.wpilibj.SampleRobot;
+import edu.wpi.first.wpilibj.RobotDrive;
+import edu.wpi.first.wpilibj.Joystick;
+import edu.wpi.first.wpilibj.Timer;
+import edu.wpi.first.wpilibj.livewindow.LiveWindow;
+
+import com.kauailabs.navx.frc.AHRS;
 
 public class AutoShootManager {
+	
+    private AHRS ahrs;
+   
+    private double degrees;
+    private double distance;
+    private String angleDistance;
+
 	private final double angle_MAX = 0;
 	private final double angle_MIN = 0;
 	private final double distance_MIN = 20;
@@ -20,11 +38,25 @@ public class AutoShootManager {
 	public AutoShootManager(Drive drive, BallShoot shoot) {
 		this.drive = drive;
 		this.shoot = shoot;
+		this.ahrs = new AHRS(SPI.Port.kMXP);
+		
 	}
 	
-	public boolean ballShootComputer(double distance, double angle) 
+	public boolean ballShootComputer(uART uART) 
 	{
-		double circumference = 7 * 2.54 * Math.PI * 10;
+		// Get output of angle and distance and split
+		angleDistance = uART.aimToShoot();
+		degrees = (Double.parseDouble(angleDistance.substring(0, angleDistance.indexOf(' ')))) * (180 / Math.PI); // degrees
+		distance = (Double.parseDouble(angleDistance.substring(angleDistance.indexOf(' ') + 1))) * 25.4; // inches
+		
+		// Rotate angle degrees
+		robot.rotate(degrees);
+		// Drive straight in direction of robot
+		robot.driveInDir(distance);
+		// Rotate -angle degrees
+		robot.rotate(-degrees);
+		
+		/*double circumference = 7 * 2.54 * Math.PI * 10;
 		double distancePerPulse = (Math.PI * circumference)/360.0;
 		String angleDist = uART.aimToShoot();
 		int indexOfSpace = angleDist.indexOf(" ");
@@ -72,9 +104,9 @@ public class AutoShootManager {
         	rightSpeed *= -1.0;
         }
 		setRaw(leftSpeed, rightSpeed);
+		*/
 		
-		
-		// uART.aimToShoot() returns "angle distance" (Radians millimeters)
+		// uART.aimToShoot() returns "angle distance" (radians millimeters)
 		
 	}//end of another method
 }

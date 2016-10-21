@@ -1,12 +1,12 @@
 
-package org.usfirst.frc.team5968.robot;
+package robot;
 
-import edu.wpi.first.wpilibj.DigitalInput;
+//import edu.wpi.first.wpilibj.DigitalInput;
 import edu.wpi.first.wpilibj.IterativeRobot;
 
 public class Robot extends IterativeRobot {
-
-	private Drive drive;
+	private uART uART;
+	/*private Drive drive;
 	private AutoShootManager autoShootManager;
 	private HumanInterface humanInterface;
 	private BallShoot shoot;
@@ -16,31 +16,35 @@ public class Robot extends IterativeRobot {
 	
 	private DigitalInput autoSwitch;
 	private boolean autoBool;
-    
+    */
+	
+	public Robot() {
+		this.uART = new uART();
+	}
     public void robotInit() {
     	
-    	drive = new Drive();
+    	/*drive = new Drive();
     	shoot = new BallShoot();
     	autoShootManager = new AutoShootManager(drive, shoot);
     	humanInterface = new HumanInterface(drive, shoot, autoShootManager);
     	dash = new SmartDash(drive, humanInterface);
     	
     	autoSwitch = new DigitalInput(PortMap.driveSwitch);
-    }
-    private AutoState autoState;
+    */}
+    //private AutoState autoState;
     public void autonomousInit() {
-    	start = System.currentTimeMillis();
+    	/*start = System.currentTimeMillis();
     	autoBool = autoSwitch.get();
-    	autoState = AutoState.IDLE;
+    	autoState = AutoState.IDLE;*/
     }
 
-    private enum AutoState {
+    /*private enum AutoState {
     	IDLE, DRIVE_FORWARD1, DRIVE_BACKWARD, DRIVE_FORWARD2, DRIVE_BACKWARD2, DONE
-    }
+    }*/
     
     public void autonomousPeriodic() {
     	
-    	if(autoBool)
+    	/*if(autoBool)
     	{
     		if(System.currentTimeMillis() - start <= 5000)
     		{
@@ -96,10 +100,8 @@ public class Robot extends IterativeRobot {
     		}
     	}
     	
-    	/*if(drive.get
-    	 * */
     	 
-    	dash.writeToDash();
+    	dash.writeToDash();*/
     }
     
     public void teleopInit(){
@@ -108,16 +110,16 @@ public class Robot extends IterativeRobot {
     
     public void teleopPeriodic() {
 
-    	humanInterface.buttonControls();
+    	/*humanInterface.buttonControls();
     	humanInterface.joystickControls();
     	dash.writeToDash();
-        
+        */
     }
     
     public void testPeriodic() {
     
-        humanInterface.buttonControls();
-    	humanInterface.joystickControls();
+        //humanInterface.buttonControls();
+    	//humanInterface.joystickControls();
         
     }
 }

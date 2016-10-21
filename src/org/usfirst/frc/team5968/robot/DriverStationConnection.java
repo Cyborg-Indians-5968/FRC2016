@@ -1,4 +1,4 @@
-package org.usfirst.frc.team5968.robot;
+package robot;
 
 import java.io.IOException;
 import java.net.ServerSocket;

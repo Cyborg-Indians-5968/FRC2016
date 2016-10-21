@@ -1,6 +1,7 @@
-package org.usfirst.frc.team5968.robot;
+package robot;
 
 import org.usfirst.frc.team5968.robot.HumanInterface.BallFeedStates;
+import org.usfirst.frc.team5968.robot.PortMap;
 
 import edu.wpi.first.wpilibj.SpeedController;
 import edu.wpi.first.wpilibj.Talon;
@@ -13,7 +14,7 @@ public class BallFeed {
 		
 		feedMotor = new Talon(PortMap.feedMotor);
 		
-	}//end of method
+	}
 	
 	
 	public void ballFeed(BallFeedStates state){

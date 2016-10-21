@@ -1,4 +1,4 @@
-package org.usfirst.frc.team5968.robot;
+package robot;
 
 import edu.wpi.first.wpilibj.CounterBase.EncodingType;
 import edu.wpi.first.wpilibj.interfaces.Gyro;
@@ -74,11 +74,12 @@ public class Drive {
 		setRaw(leftSpeed, rightSpeed);
 	}
 	
+	
+	
 	public void setRaw(double leftSpeed, double rightSpeed){
 		leftMotor.set(leftSpeed);
 		rightMotor.set(-rightSpeed);
 	}
-	
 	public void humanDrive(double leftSpeed, double rightSpeed)
 	{
 		if(Math.abs(leftSpeed) <= .03)
