@@ -1,18 +1,10 @@
 package org.usfirst.frc.team5968.robot;
 
 import edu.wpi.first.wpilibj.CounterBase.EncodingType;
-import edu.wpi.first.wpilibj.interfaces.Gyro;
-
-import edu.wpi.first.wpilibj.ADXRS450_Gyro;
 import edu.wpi.first.wpilibj.CANTalon;
 import edu.wpi.first.wpilibj.Encoder;
-import edu.wpi.first.wpilibj.SpeedController;
-import edu.wpi.first.wpilibj.Timer;
 
 public class Drive {
-	
-	private long nanotimeOld;
-	
 	private static CANTalon leftMotorFront;
 	private static CANTalon rightMotorFront;
 	private static CANTalon leftMotorBack;
@@ -20,10 +12,6 @@ public class Drive {
 	
 	private Encoder leftEncoder;
 	private Encoder rightEncoder;
-	private double leftEncoderOld;
-	private double rightEncoderOld;
-	
-	private static final double diameter = 7.65;
 	
 	public Drive(){
 
@@ -38,15 +26,11 @@ public class Drive {
 		rightMotorBack.changeControlMode(CANTalon.ControlMode.PercentVbus);
 		*/
 		
-		leftEncoder = new Encoder(0, 1, false, EncodingType.k1X);
-		rightEncoder = new Encoder(2, 3, false, EncodingType.k1X);
+		leftEncoder = new Encoder(PortMap.leftEncoderOne, PortMap.leftEncoderTwo, false, EncodingType.k1X);
+		rightEncoder = new Encoder(PortMap.rightEncoderOne, PortMap.rightEncoderTwo, false, EncodingType.k1X);
 		
 		leftEncoder.setDistancePerPulse(.0469);
 		rightEncoder.setDistancePerPulse(.0469);
-		
-		nanotimeOld = System.nanoTime();
-		leftEncoderOld = leftEncoder.get();
-		rightEncoderOld = rightEncoder.get();
 		
 	}
     

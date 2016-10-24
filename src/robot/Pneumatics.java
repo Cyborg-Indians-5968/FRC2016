@@ -1,4 +1,4 @@
-package robot;
+package org.usfirst.frc.team5968.robot;
 import edu.wpi.first.wpilibj.DoubleSolenoid;
 import edu.wpi.first.wpilibj.Compressor;
 
@@ -7,7 +7,7 @@ public class Pneumatics {
 	private DoubleSolenoid shootAngle;
 	
 	public Pneumatics() {
-		compressor = new Compressor();
+		compressor = new Compressor(2);
 		shootAngle = new DoubleSolenoid(PortMap.shootAngle, PortMap.shootAngle2);
 		compressor.setClosedLoopControl(true);
 		

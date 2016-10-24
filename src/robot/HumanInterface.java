@@ -1,5 +1,6 @@
-package robot;
+package org.usfirst.frc.team5968.robot;
 
+import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.Joystick;
 
 public class HumanInterface {
@@ -12,22 +13,15 @@ public class HumanInterface {
 	private Pneumatics piston;
 	private BallShoot shoot;
 	private uART uart;
-	private DriverStationConnection driverStation;
-	
-	private boolean controlsReversed = false;
-	private boolean altControlsEnabled = false;
 	private boolean driving = false;
 	
 	private boolean oldPistonButtonValue = false;
-	private boolean oldReverseButtonValue = false;
-	private boolean oldAltControlButtonValue = false;
-	private AutoShootManager teleShoot;
+	private boolean oldAlignButtonValue = false;
 	
 	public HumanInterface(Drive drive, BallShoot shoot, AutoShootManager teleShoot){
 		
 		this.drive = drive;
 		this.shoot = shoot;
-		this.teleShoot = teleShoot;
 		
 		leftStick = new Joystick(PortMap.leftJoystick);
 		rightStick = new Joystick(PortMap.rightJoystick);
@@ -35,7 +29,6 @@ public class HumanInterface {
 		feed = new BallFeed();
 		piston = new Pneumatics();
 		uart = new uART();
-		driverStation = new DriverStationConnection();
 	}
 	
 	public enum BallFeedStates {
@@ -43,12 +36,9 @@ public class HumanInterface {
 	}
 	
 	public enum Buttons {
-		REVERSE_CONTROLS, 
-		ALTERNATE_CONTROLS, 
-		TOGGLE_MANUAL_SHOOT, 
 		TOGGLE_SHOOT_PLATFORM, 
-		AUTO_AIM,
-		SHOOT, 
+		SHOOTER_ON_OFF, 
+		SHOOTER_BACKWARD,
 		FEED_SLOW, 
 		FEED_FAST, 
 		ALIGN_TO_SHOOT,
@@ -56,58 +46,31 @@ public class HumanInterface {
 		TAKE_PICTURE
 	}
 	
-	//TODO: These are randomly assigned. FIX!!!!
 	public boolean getButtonValue(Buttons button) {
 		
 		switch(button)
 		{
-			case REVERSE_CONTROLS:
-				return leftStick.getRawButton(7); //TODO: Consider adding a "|| rightStick.getRawButton(7)" to this so Kyle doesn't have to think about it.
-				
-			case ALTERNATE_CONTROLS:
-				return altStick.getRawButton(8);
-					
-			case TOGGLE_MANUAL_SHOOT:
-				return altStick.getRawButton(12);
-				
 			case TOGGLE_SHOOT_PLATFORM:
-				return altStick.getRawButton(1);
-				
-			case SHOOT:
-				return altStick.getRawButton(4);
+				return altStick.getRawButton(2); //B button
+			case SHOOTER_ON_OFF:
+				return altStick.getRawAxis(2) >= .5; //Left & Right Trigger
+			case SHOOTER_BACKWARD:
+				return altStick.getRawAxis(3) >= .5;
 			case FEED_SLOW:
-				return altStick.getRawButton(10);
-			
+				return Math.abs(altStick.getRawAxis(0)) - Math.abs(altStick.getRawAxis(1)) >= .5; //Left or right on left joystick
 			case FEED_FAST:
-				return altStick.getRawButton(11);
+				return altStick.getRawAxis(1) - Math.abs(altStick.getRawAxis(0)) >= .5; //Up on left joystick
 			case ALIGN_TO_SHOOT:
-				return altStick.getRawButton(9);
+				return altStick.getRawButton(4) || altStick.getRawButton(5); //left and right bumpers
 			case FEED_BACKWARDS:
-				return altStick.getRawButton(3);
-			case TAKE_PICTURE:
-				return altStick.getRawButton(6) || leftStick.getRawButton(1) || rightStick.getRawButton(1);
+				return altStick.getRawAxis(1) - Math.abs(altStick.getRawAxis(0)) <= -.5; //down on left joystick
 			default:
 				return false;
 		}
-		
+		//You like my magic numbers?^^
 	}
 	
 	public void buttonControls(){
-		
-		boolean reverseButton = getButtonValue(Buttons.REVERSE_CONTROLS);
-		if(reverseButton && !oldReverseButtonValue)
-		{
-			controlsReversed = !controlsReversed;
-		}
-		oldReverseButtonValue = reverseButton;
-		
-		boolean altButton = getButtonValue(Buttons.ALTERNATE_CONTROLS);
-		if (altButton && !oldAltControlButtonValue)
-		{
-			altControlsEnabled = !altControlsEnabled;
-		}
-		oldAltControlButtonValue = altButton;
-		
         boolean pistonButton = getButtonValue(Buttons.TOGGLE_SHOOT_PLATFORM);
 		if(pistonButton && !oldPistonButtonValue)
 		{
@@ -115,82 +78,75 @@ public class HumanInterface {
 		}
         oldPistonButtonValue = pistonButton;
 		
-		if(getButtonValue(Buttons.SHOOT))
+		if(getButtonValue(Buttons.SHOOTER_ON_OFF))
 		{
-			shoot.turnOnShooter();
+			shoot.runForward();
+		}
+		else if(getButtonValue(Buttons.SHOOTER_BACKWARD)){
+			shoot.runBackward();
 		}
 		else 
 		{
-			shoot.turnOffShooter();
+			shoot.turnOff();
 		}
         
-		if(getButtonValue(Buttons.ALIGN_TO_SHOOT) || driving)
+		boolean alignButton = getButtonValue(Buttons.ALIGN_TO_SHOOT);
+		if(alignButton && !oldAlignButtonValue)
 		{
-			String[] data = uart.aimToShoot().split(" ");
-			teleShoot.ballShootComputer(Double.parseDouble(data[0]), Double.parseDouble(data[1]));
+			oldAlignButtonValue = alignButton;
+			boolean firstLoop = true;
+			long startTime = System.currentTimeMillis();
+			final double timeoutSeconds = 10;
 			
+			while(!(alignButton = getButtonValue(Buttons.ALIGN_TO_SHOOT)) && !oldAlignButtonValue){
+				oldAlignButtonValue = alignButton;
+				
+				String data = uart.getAimData(firstLoop);
+				firstLoop = false;
+				
+				if(data != null){
+					System.out.println(data);
+					break;
+				}
+				
+				if(System.currentTimeMillis() - startTime >= timeoutSeconds){
+					DriverStation.reportError("Raspberry pi communication failed! You probably don't want to use it again :-(", false);
+					break;
+				}
+			}
+			
+			if(alignButton){
+				DriverStation.reportWarning("Raspberry pi targeting aborted!", false);
+			}
 		}
+		oldAlignButtonValue = alignButton;
 		
 		if(getButtonValue(Buttons.FEED_FAST))
 		{
 			feed.ballFeed(BallFeedStates.FAST);
+			
 		}
 		else if(getButtonValue(Buttons.FEED_SLOW))
 		{
 			feed.ballFeed(BallFeedStates.SLOW);
+			
+		}
+		else if(getButtonValue(Buttons.FEED_BACKWARDS)){
+			feed.ballFeed(BallFeedStates.BACKWARDS);
+			
 		}
 		else
 		{
 			feed.ballFeed(BallFeedStates.STOPPED);
 		}
-		
-		if(getButtonValue(Buttons.FEED_BACKWARDS)){
-			feed.ballFeed(BallFeedStates.BACKWARDS);
-		}
-		
-		if(getButtonValue(Buttons.TAKE_PICTURE)){
-			driverStation.sendImage(uart.takePicture());
-		}
 	}//end of method
 	
 	public void joystickControls() {
-		if(altControlsEnabled)
-		{
-			
-			if(altStick.getX() > 0)
-			{
-				drive.humanDrive(altStick.getY() - altStick.getX(), altStick.getY());
-			}
-			else if(altStick.getX() < 0)
-			{
-				drive.humanDrive(altStick.getY(), altStick.getY() - altStick.getX());
-			}
-			else
-			{
-				drive.humanDrive(altStick.getY(), altStick.getY());
-			}
-		}
-		else
-		{
-			if(controlsReversed)
-			{
-				drive.humanDrive(Math.pow(-1.0 * leftStick.getY(), 1), Math.pow(-1.0 * rightStick.getY(), 1));
-			}
-			else
-			{
-                //TODO: It is not really appropriate for the human interface class to be aware that the right motor is backwards. This negation should've been donw somewhere in drive.
-				drive.humanDrive(Math.pow(leftStick.getY(), 1), Math.pow(rightStick.getY(), 1));
-			}
-		}
+		drive.humanDrive(leftStick.getY() * .5, rightStick.getY() * .5);
 	}//end of method
-	
-	public boolean getControlsReversed() {
-		return controlsReversed;
-	}
-	public boolean getAltControlsEnabled() {
-		return altControlsEnabled;
-	}
 	public boolean getDriving() {
 		return driving;
 	}
+	
+	
 }

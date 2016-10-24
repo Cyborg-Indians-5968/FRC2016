@@ -1,4 +1,4 @@
-package robot;
+package org.usfirst.frc.team5968.robot;
 
 import edu.wpi.first.wpilibj.SpeedController;
 import edu.wpi.first.wpilibj.VictorSP;
@@ -16,13 +16,18 @@ public class BallShoot
 	
 	
 	//TODO set the timing of the shooting
-	public void turnOnShooter() {
+	public void runForward() {
 	
 		leftShootMotor.set(1.0);
-		rightShootMotor.set(-1.0);
+		rightShootMotor.set(1.0);
 	}
-	public void turnOffShooter() {
+	public void turnOff() {
 		leftShootMotor.set(0);
 		rightShootMotor.set(0);		
 	}	
+	
+	public void runBackward(){
+		leftShootMotor.set(-1.0);
+		rightShootMotor.set(-1.0);
+	}
 }
