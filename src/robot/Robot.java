@@ -6,6 +6,7 @@ import edu.wpi.first.wpilibj.IterativeRobot;
 
 public class Robot extends IterativeRobot {
 	private uART uART;
+	private Drive drive;
 	/*private Drive drive;
 	private AutoShootManager autoShootManager;
 	private HumanInterface humanInterface;
@@ -22,7 +23,7 @@ public class Robot extends IterativeRobot {
 		this.uART = new uART();
 	}
     public void robotInit() {
-    	
+    	drive = new Drive();
     	/*drive = new Drive();
     	shoot = new BallShoot();
     	autoShootManager = new AutoShootManager(drive, shoot);
