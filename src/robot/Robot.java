@@ -13,13 +13,11 @@ public class Robot extends IterativeRobot {
 	
 	private long start;   
 	
-	public Robot() {
-		this.uART = new uART();
-	}
     public void robotInit() {
     	drive = new Drive();
     	shoot = new BallShoot();
-    	autoShootManager = new AutoShootManager(drive, shoot);
+    	this.uART = new uART();
+    	autoShootManager = new AutoShootManager(drive, shoot, uART);
     	humanInterface = new HumanInterface(drive, shoot, autoShootManager);
     }
     private AutoState autoState;
