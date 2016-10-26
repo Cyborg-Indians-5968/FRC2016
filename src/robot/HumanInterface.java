@@ -104,23 +104,13 @@ public class HumanInterface {
 			boolean firstLoop = true;
 			long startTime = System.currentTimeMillis();
 			final double timeoutMs = 20 * 1000;
-			boolean buttonWasReleased = false;
 			
 			String data;
 			while(true) {
-				alignButton = getButtonValue(Buttons.ALIGN_TO_SHOOT);
 				
-				if (!alignButton && oldAlignButtonValue)
-				{
-					if (buttonWasReleased)
-					{
-						DriverStation.reportWarning("Targeting aborted!", false);
-						return;
-					}
-					else
-					{
-						buttonWasReleased = true;
-					}
+				if(leftStick.getY() >= .25 || rightStick.getY() >= .25){
+					DriverStation.reportWarning("Targeting aborted!", false);
+					return;
 				}
 				
 				data = uart.getAimData(firstLoop);
@@ -134,12 +124,13 @@ public class HumanInterface {
 					DriverStation.reportError("Raspberry pi communication failed! You probably don't want to use it again :-(", false);
 					return;
 				}
-				
-				oldAlignButtonValue = alignButton;
 			}
 			
 			DriverStation.reportWarning("Distance: " + data.split(" ")[0] + " Angle: " + data.split(" ")[1] + " Is this ok?"
 					+ "Press start if yes, Back if no", false);
+			
+			startTime = System.currentTimeMillis();
+			long timeoutMilliseconds = 10;
 			while(true){
 				if(getButtonValue(Buttons.AIM_RESULTS_OK)){
 					break;
@@ -148,10 +139,14 @@ public class HumanInterface {
 					DriverStation.reportWarning("Targeting aborted!", false);
 					return;
 				}
+				else if(System.currentTimeMillis() - startTime >= timeoutMilliseconds){
+					DriverStation.reportWarning("Timeout! Targeting aborted!", false);
+					return;
+				}
 			}
 			
 			while(!autoShoot.ballShootComputer(data)){
-				if(getButtonValue(Buttons.ALIGN_TO_SHOOT)){
+				if(leftStick.getY() >= .25 || rightStick.getY() >= .25){
 					DriverStation.reportWarning("Targeting aborted!", false);
 					return;
 				}

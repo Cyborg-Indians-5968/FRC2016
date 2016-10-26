@@ -19,6 +19,7 @@ public class AutoShootManager {
 	private uART uART;
   
 	private AimState aimState = AimState.DONE;
+	private AimState driveBackState = AimState.DONE;
 	
 	public AutoShootManager(Drive drive, BallShoot shoot, uART uART) {
 		this.drive = drive;
@@ -91,9 +92,11 @@ public class AutoShootManager {
 		
 		return false;
 	}//end of another method
-
-
-	public void driveBack() {
+	
+	double dist_prev;
+	double dist;
+	double dir;
+	public boolean driveBack() {
 		/*if (auto_state == AutoState.IDLE) {
 			dist = dir = 0;
 			auto_state = AutoState.DRIVE_BACKWARD;
@@ -111,10 +114,13 @@ public class AutoShootManager {
 			auto_state = AutoState.DONE;
 			drive.setRaw(0, 0);
 		}*/
-
-		// should this be non-blocking?
-		double dist_prev = drive.getDistance(), dist = 0, dir = 1;
-		while(true) {
+		if(driveBackState == AimState.DONE){
+			dist_prev = drive.getDistance(); 
+			dist = 0;
+			dir = 1;
+			driveBackState = AimState.DRIVE;
+		}
+		else if(driveBackState == AimState.DRIVE){
 			dist += dir * (-dist_prev + (dist_prev = drive.getDistance()));
 			if (dist <= DISTANCE_TO_TRAVEL - ERR) {
 				dir = 1;
@@ -124,9 +130,9 @@ public class AutoShootManager {
 				drive.driveStraight(false);
 			} else {
 				drive.setRaw(0, 0);
-				break;
+				return true;
 			}
-			// stall?
 		}
+		return false;
 	}
 }

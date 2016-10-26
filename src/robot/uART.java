@@ -28,6 +28,10 @@ public class uART {
 	public String getAimData(boolean firstLoop)
 	{	
 		if(firstLoop){
+			try{
+				byte[] b = port.read(port.getBytesReceived());
+			}
+			catch(RuntimeException ex){}
 			port.write("gett".getBytes(StandardCharsets.US_ASCII), 4);
 			port.flush();
 		}
