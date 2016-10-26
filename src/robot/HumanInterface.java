@@ -13,6 +13,7 @@ public class HumanInterface {
 	private Pneumatics piston;
 	private BallShoot shoot;
 	private uART uart;
+	private AutoShootManager autoShoot;
 	private boolean driving = false;
 	
 	private boolean oldPistonButtonValue = false;
@@ -29,6 +30,7 @@ public class HumanInterface {
 		feed = new BallFeed();
 		piston = new Pneumatics();
 		uart = new uART();
+		autoShoot = new AutoShootManager(drive, shoot, uart);
 	}
 	
 	public enum BallFeedStates {
@@ -43,7 +45,8 @@ public class HumanInterface {
 		FEED_FAST, 
 		ALIGN_TO_SHOOT,
 		FEED_BACKWARDS,
-		TAKE_PICTURE
+		AIM_RESULTS_OK,
+		AIM_RESULTS_NOT_OK;
 	}
 	
 	public boolean getButtonValue(Buttons button) {
@@ -61,9 +64,13 @@ public class HumanInterface {
 			case FEED_FAST:
 				return altStick.getRawAxis(1) - Math.abs(altStick.getRawAxis(0)) >= .5; //Up on left joystick
 			case ALIGN_TO_SHOOT:
-				return altStick.getRawButton(4) || altStick.getRawButton(5); //left and right bumpers
+				return altStick.getRawButton(5) || altStick.getRawButton(6); //left and right bumpers
 			case FEED_BACKWARDS:
 				return altStick.getRawAxis(1) - Math.abs(altStick.getRawAxis(0)) <= -.5; //down on left joystick
+			case AIM_RESULTS_OK:
+				return altStick.getRawButton(8); //start button
+			case AIM_RESULTS_NOT_OK:
+				return altStick.getRawButton(7); //back button
 			default:
 				return false;
 		}
@@ -96,27 +103,58 @@ public class HumanInterface {
 			oldAlignButtonValue = alignButton;
 			boolean firstLoop = true;
 			long startTime = System.currentTimeMillis();
-			final double timeoutSeconds = 10;
+			final double timeoutMs = 20 * 1000;
+			boolean buttonWasReleased = false;
 			
-			while(!(alignButton = getButtonValue(Buttons.ALIGN_TO_SHOOT)) && !oldAlignButtonValue){
-				oldAlignButtonValue = alignButton;
+			String data;
+			while(true) {
+				alignButton = getButtonValue(Buttons.ALIGN_TO_SHOOT);
 				
-				String data = uart.getAimData(firstLoop);
+				if (!alignButton && oldAlignButtonValue)
+				{
+					if (buttonWasReleased)
+					{
+						DriverStation.reportWarning("Targeting aborted!", false);
+						return;
+					}
+					else
+					{
+						buttonWasReleased = true;
+					}
+				}
+				
+				data = uart.getAimData(firstLoop);
 				firstLoop = false;
 				
 				if(data != null){
-					System.out.println(data);
 					break;
 				}
 				
-				if(System.currentTimeMillis() - startTime >= timeoutSeconds){
+				if(System.currentTimeMillis() - startTime >= timeoutMs){
 					DriverStation.reportError("Raspberry pi communication failed! You probably don't want to use it again :-(", false);
+					return;
+				}
+				
+				oldAlignButtonValue = alignButton;
+			}
+			
+			DriverStation.reportWarning("Distance: " + data.split(" ")[0] + " Angle: " + data.split(" ")[1] + " Is this ok?"
+					+ "Press start if yes, Back if no", false);
+			while(true){
+				if(getButtonValue(Buttons.AIM_RESULTS_OK)){
 					break;
+				}
+				else if(getButtonValue(Buttons.AIM_RESULTS_NOT_OK)){
+					DriverStation.reportWarning("Targeting aborted!", false);
+					return;
 				}
 			}
 			
-			if(alignButton){
-				DriverStation.reportWarning("Raspberry pi targeting aborted!", false);
+			while(!autoShoot.ballShootComputer(data)){
+				if(getButtonValue(Buttons.ALIGN_TO_SHOOT)){
+					DriverStation.reportWarning("Targeting aborted!", false);
+					return;
+				}
 			}
 		}
 		oldAlignButtonValue = alignButton;

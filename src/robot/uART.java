@@ -37,8 +37,14 @@ public class uART {
 			byte[] b = port.read(port.getBytesReceived());
 			result = new String(b, StandardCharsets.US_ASCII);
 		}
-		catch(Exception e){}
+		catch(RuntimeException ex){
+			DriverStation.reportError(ex.toString(), true);
+		}
 		
+		if (result.length() == 0) {
+			return null;
+		}
+			
 		return result;
 	}
 }
