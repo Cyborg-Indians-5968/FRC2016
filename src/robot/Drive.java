@@ -47,7 +47,7 @@ public class Drive {
 		}
 	}
 	
-	final double INITIAL_SPEED = 0.4; //previously .5
+	final double INITIAL_SPEED = 0.5; 
     double leftSpeed = INITIAL_SPEED;
     double rightSpeed = INITIAL_SPEED;
     
@@ -59,8 +59,8 @@ public class Drive {
 	
 	public void driveStraight(boolean forward)
 	{
-		final double SPEED_INC = 0.05; //previously .1
-		final double MIN_SPEED = 0.2; //previously .3
+		final double SPEED_INC = 0.1; 
+		final double MIN_SPEED = 0.3; 
 		
         double leftDistance = getLeftEncoder();
         double rightDistance = getRightEncoder();
