@@ -2,9 +2,6 @@ package org.usfirst.frc.team5968.robot;
 
 
 public class AutoShootManager {
-	
-	private final double DISTANCE_TO_TRAVEL = 7;
-	private final double ERR = .01;
 	private final double idealDistance = 80;
    
     private double initDegrees;
@@ -12,127 +9,93 @@ public class AutoShootManager {
     private double distanceToGoal;
     private double distanceToDrive;
     private double toGoalDegrees;
-    private String angleDistance;
 
 	private Drive drive;	
-	private NavXMXP ahrs;
-	private uART uART;
+	private NavXMXP navx;
   
-	private AimState aimState = AimState.DONE;
-	private AimState driveBackState = AimState.DONE;
+	private AimState aimState = AimState.IDLE;
 	
-	public AutoShootManager(Drive drive, BallShoot shoot, uART uART) {
+	public AutoShootManager(Drive drive, BallShoot shoot, NavXMXP navX) {
 		this.drive = drive;
-		ahrs = new NavXMXP();
-		this.uART = uART;
+		//navx = new NavXMXP();
+		this.navx = navX;
 	}
 	
 	private enum AimState {
 		TURN_1,
 		DRIVE,
 		TURN_2,
-		DONE
+		IDLE
 	}
 	
 	public boolean ballShootComputer(String aimData) 
 	{
 		// Get output of angle and distance and split
-		
-		if(aimState == AimState.DONE){
-			distanceToGoal = (Double.parseDouble(angleDistance.substring(0, angleDistance.indexOf(' ')))) * (180 / Math.PI); // degrees
+		//Entry point
+		if(aimState == AimState.IDLE){
+			distanceToGoal = (Double.parseDouble(aimData.substring(0, aimData.indexOf(' ')))) / 25.4; // result in inches
 			
-			initDegrees = (Double.parseDouble(angleDistance.substring(angleDistance.indexOf(' ') + 1))) * 25.4; // inches
+			initDegrees = (Double.parseDouble(aimData.substring(aimData.indexOf(' ') + 1))) * (180 / Math.PI); // result in degrees
 			distanceToDrive = Math.sqrt(Math.pow(idealDistance, 2) + Math.pow(distanceToGoal, 2) - 2 * idealDistance * distanceToGoal * Math.cos(initDegrees)); 
 			finalDegrees = Math.asin((idealDistance * Math.sin(initDegrees)) / distanceToDrive);
 			
 			toGoalDegrees = -1 * Math.asin((distanceToGoal * Math.sin(initDegrees)) / distanceToDrive);
 			
-			ahrs.resetYaw();
+			navx.resetYaw();
 			aimState = AimState.TURN_1;
 		}
 		
 		else if(aimState == AimState.TURN_1){
-			if(Math.abs(ahrs.getYaw()) >= Math.abs(finalDegrees)){
+			if(Math.abs(navx.getYaw()) >= Math.abs(finalDegrees)){
 				drive.setRaw(0, 0);
 				aimState = AimState.DRIVE;
-				drive.resetDistance();
+				drive.resetDriveStraight();
 			}
 			else if (finalDegrees > 0) {
-				drive.setRaw(.1, -.1);
+				drive.setRaw(.05, -.05);
 			}
 			else {
-				drive.setRaw(-.1, .1);
+				drive.setRaw(-.05, .05);
 			}
 		}
 		
 		else if(aimState == AimState.DRIVE){
-			if(drive.getDistance() >= distanceToDrive){
+			if(Math.abs(drive.getDistance()) >= distanceToDrive){
 				drive.setRaw(0, 0);
 				aimState = AimState.TURN_2;
-				ahrs.resetYaw();
+				navx.resetYaw();
 			}
 			else {
-				drive.driveStraight(true);
+				drive.driveStraight(distanceToDrive > 0.0);
 			}
 		}
 		
 		else if(aimState == AimState.TURN_2){
-			if(Math.abs(ahrs.getYaw()) >= Math.abs(toGoalDegrees)){
+			if(Math.abs(navx.getYaw()) >= Math.abs(toGoalDegrees)){
 				drive.setRaw(0, 0);
-				aimState = AimState.DONE;
+				aimState = AimState.IDLE;
 				return true;
 			}
 			else if(finalDegrees < 0){
-				drive.setRaw(.1, -.1);
+				drive.setRaw(.05, -.05);
 			}
 			else{
-				drive.setRaw(-.1, .1);
+				drive.setRaw(-.05, .05);
 			}
 		}
 		
 		return false;
 	}//end of another method
 	
-	double dist_prev;
-	double dist;
-	double dir;
 	public boolean driveBack() {
-		/*if (auto_state == AutoState.IDLE) {
-			dist = dir = 0;
-			auto_state = AutoState.DRIVE_BACKWARD;
-			dist_prev = drive.getDistance();
-		} else if (auto_state == AutoState.DONE) return;
-
-		dist += dir * (drive.getDistance() - dist_prev);
-		if (dist <= DISTANCE_TO_TRAVEL - ERR) {
-			dir = 1;
-			drive.driveStraight(true);
-		} else if (dist >= DISTANCE_TO_TRAVEL + ERR) {
-			dir = -1;
-			drive.driveStraight(false);
-		} else {
-			auto_state = AutoState.DONE;
-			drive.setRaw(0, 0);
-		}*/
-		if(driveBackState == AimState.DONE){
-			dist_prev = drive.getDistance(); 
-			dist = 0;
-			dir = 1;
-			driveBackState = AimState.DRIVE;
-		}
-		else if(driveBackState == AimState.DRIVE){
-			dist += dir * (-dist_prev + (dist_prev = drive.getDistance()));
-			if (dist <= DISTANCE_TO_TRAVEL - ERR) {
-				dir = 1;
-				drive.driveStraight(true);
-			} else if (dist >= DISTANCE_TO_TRAVEL + ERR) {
-				dir = -1;
-				drive.driveStraight(false);
-			} else {
-				drive.setRaw(0, 0);
-				return true;
-			}
-		}
-		return false;
+		final double DRIVE_DISTANCE = 80;
+	    
+	    if (Math.abs(drive.getDistance()) < DRIVE_DISTANCE) {
+	        drive.driveStraight(false);
+	        return false;
+	    }
+	    
+	    drive.setRaw(0.0, 0.0);
+	    return true;
 	}
 }

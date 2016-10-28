@@ -2,6 +2,7 @@ package org.usfirst.frc.team5968.robot;
 
 import edu.wpi.first.wpilibj.CounterBase.EncodingType;
 import edu.wpi.first.wpilibj.CANTalon;
+import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.Encoder;
 
 public class Drive {
@@ -46,39 +47,67 @@ public class Drive {
 		}
 	}
 	
+	final double INITIAL_SPEED = 0.4; //previously .5
+    double leftSpeed = INITIAL_SPEED;
+    double rightSpeed = INITIAL_SPEED;
+    
+    public void resetDriveStraight() {
+    	leftSpeed = INITIAL_SPEED;
+    	rightSpeed = INITIAL_SPEED;
+    	resetDistance();
+    }
+	
 	public void driveStraight(boolean forward)
 	{
-        double leftSpeed = 0.8;
-        double rightSpeed = 0.8;
+		final double SPEED_INC = 0.05; //previously .1
+		final double MIN_SPEED = 0.2; //previously .3
 		
         double leftDistance = getLeftEncoder();
         double rightDistance = getRightEncoder();
+        //DriverStation.reportWarning(String.format("Encoders: %f, %f", leftDistance, rightDistance), false);
         double distanceDiff = Math.abs(leftDistance - rightDistance);
         
         final double distanceThreshold = .1;
         
         if(distanceDiff > distanceThreshold)
         {
-        	if(Math.abs(leftDistance) > Math.abs(rightDistance))
+        	if(Math.abs(leftDistance) < Math.abs(rightDistance))
         	{
-        		rightSpeed -= .1;
+        		//DriverStation.reportWarning("l < r", false);
+        		if (leftSpeed < INITIAL_SPEED)
+        		{ leftSpeed += SPEED_INC; }
+        		else
+        		{ rightSpeed -= SPEED_INC; }
         	}
         	else
         	{
-        		leftSpeed -= .1;
+        		//DriverStation.reportWarning("l > r", false);
+        		if (rightSpeed < INITIAL_SPEED)
+        		{ rightSpeed += SPEED_INC; }
+        		else
+        		{ leftSpeed -= SPEED_INC; }
         	}
         }
-        if(!forward)
+        
+        // Cap left and right speeds
+        leftSpeed = Math.max(MIN_SPEED, leftSpeed);
+        rightSpeed = Math.max(MIN_SPEED, rightSpeed);
+        
+        //DriverStation.reportWarning(String.format("%f , %f", leftSpeed, rightSpeed), false);
+        
+        if(forward)
         {
-        	leftSpeed *= -1.0;
-        	rightSpeed *= -1.0;
+        	setRaw(leftSpeed, rightSpeed);	
         }
-		setRaw(leftSpeed, rightSpeed);
+        else
+        {
+        	setRaw(-leftSpeed, -rightSpeed);
+        }
 	}
 	
 	public void setRaw(double leftSpeed, double rightSpeed){
-		setLeft(-leftSpeed);
-		setRight(rightSpeed);
+		setLeft(leftSpeed);
+		setRight(-rightSpeed);
 	}
 	
 	public static void setLeft(double speed) {
@@ -93,6 +122,10 @@ public class Drive {
 	
 	public void humanDrive(double leftSpeed, double rightSpeed)
 	{
+		// Joysticks are reversed from what setRaw expects
+		leftSpeed = -leftSpeed;
+		rightSpeed = -rightSpeed;
+		
 		if(Math.abs(leftSpeed) <= .03)
 		{
 			//leftSpeed = 0.0;

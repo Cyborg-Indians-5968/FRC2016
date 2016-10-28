@@ -10,6 +10,7 @@ public class Robot extends IterativeRobot {
 	private AutoShootManager autoShootManager;
 	private HumanInterface humanInterface;
 	private BallShoot shoot;
+	private NavXMXP navX;
 	
 	private long start;   
 	
@@ -17,8 +18,9 @@ public class Robot extends IterativeRobot {
     	drive = new Drive();
     	shoot = new BallShoot();
     	this.uART = new uART();
-    	autoShootManager = new AutoShootManager(drive, shoot, uART);
-    	humanInterface = new HumanInterface(drive, shoot, autoShootManager);
+    	navX = new NavXMXP();
+    	autoShootManager = new AutoShootManager(drive, shoot, navX);
+    	humanInterface = new HumanInterface(drive, shoot, autoShootManager, navX);
     }
     private AutoState autoState;
     public void autonomousInit() {
@@ -26,7 +28,7 @@ public class Robot extends IterativeRobot {
     }
 
     private enum AutoState {
-    	IDLE, DRIVE_FORWARD1, DRIVE_BACKWARD, DRIVE_FORWARD2, DRIVE_BACKWARD2, DONE
+    	IDLE, DRIVE_FORWARD, DRIVE_BACKWARD, DONE
     }
     
     public void autonomousPeriodic() {
@@ -44,35 +46,25 @@ public class Robot extends IterativeRobot {
     		
     	if(autoState == AutoState.IDLE)
     	{
-    		autoState = AutoState.DRIVE_FORWARD1;
-    		drive.resetDistance();
+    		autoState = AutoState.DRIVE_FORWARD;
+    		drive.resetDriveStraight();
     	}
-    	if(autoState == AutoState.DRIVE_FORWARD1 && drive.getDistance() > distanceToTravelInitial)
+    	if(autoState == AutoState.DRIVE_FORWARD && drive.getDistance() > distanceToTravelInitial)
     	{
-    		drive.resetDistance();
+    		drive.resetDriveStraight();
     		autoState = AutoState.DRIVE_BACKWARD;
     	}
     	if(autoState == AutoState.DRIVE_BACKWARD && drive.getDistance() > distanceToTravel)
     	{
-    		drive.resetDistance();
-    		autoState = AutoState.DONE;
-    	}
-    	if(autoState == AutoState.DRIVE_FORWARD2 && drive.getDistance() > distanceToTravel)
-    	{
-    		drive.resetDistance();
-    		autoState = AutoState.DRIVE_BACKWARD2;
-    	}
-    	if(autoState == AutoState.DRIVE_BACKWARD2 && drive.getDistance() > distanceToTravel)
-    	{
-    		drive.resetDistance();
+    		drive.resetDriveStraight();
     		autoState = AutoState.DONE;
     	}
     	
-    	if(autoState == AutoState.DRIVE_FORWARD1 || autoState == AutoState.DRIVE_FORWARD2)
+    	if(autoState == AutoState.DRIVE_FORWARD)
     	{
     		drive.driveStraight(true);
     	}
-    	else if(autoState == AutoState.DRIVE_BACKWARD || autoState == AutoState.DRIVE_BACKWARD2)
+    	else if(autoState == AutoState.DRIVE_BACKWARD)
     	{
     		drive.driveStraight(false);
     	}

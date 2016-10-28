@@ -40,13 +40,13 @@ public class uART {
 		try{
 			byte[] b = port.read(port.getBytesReceived());
 			result = new String(b, StandardCharsets.US_ASCII);
+			
+			if (result.length() == 0) {
+				return null;
+			}
 		}
 		catch(RuntimeException ex){
-			DriverStation.reportError(ex.toString(), true);
-		}
-		
-		if (result.length() == 0) {
-			return null;
+			//DriverStation.reportError(ex.toString(), true);
 		}
 			
 		return result;
